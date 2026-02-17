@@ -182,7 +182,7 @@ All scripts must start with `set -euo pipefail`. Lint: `shellcheck script.sh && 
 
 ### GitHub Actions
 
-Pin actions to SHA hashes with version comments: `actions/checkout@<full-sha>  # vX.Y.Z` (use `persist-credentials: false`). Scan workflows with `zizmor` before committing. Configure Dependabot with 7-day cooldowns and grouped updates.
+Pin actions to SHA hashes with version comments: `actions/checkout@<full-sha>  # vX.Y.Z` (use `persist-credentials: false`). Scan workflows with `zizmor` before committing. Configure Dependabot with 7-day cooldowns and grouped updates. Use `uv` ecosystem (not `pip`) for Python projects so Dependabot updates `uv.lock`.
 
 ## Workflow
 
