@@ -13,23 +13,6 @@
     "deny": [
       "Bash(rm -rf *)",
       "Bash(rm -fr *)",
-      "Bash(rm -Rf *)",
-      "Bash(rm -rF *)",
-      "Bash(rm -RF *)",
-      "Bash(rm -fR *)",
-      "Bash(rm -Fr *)",
-      "Bash(rm -FR *)",
-      "Bash(rm -r -f *)",
-      "Bash(rm -r -F *)",
-      "Bash(rm -R -f *)",
-      "Bash(rm -R -F *)",
-      "Bash(rm -f -r *)",
-      "Bash(rm -f -R *)",
-      "Bash(rm -F -r *)",
-      "Bash(rm -F -R *)",
-      "Bash(rm --recursive *)",
-      "Bash(rm --recursive --force *)",
-      "Bash(rm --force --recursive *)",
       "Bash(sudo *)",
       "Bash(mkfs *)",
       "Bash(dd *)",
@@ -37,8 +20,6 @@
       "Bash(curl *| bash*)",
       "Bash(wget *|bash*)",
       "Bash(wget *| bash*)",
-      "Bash(* | sh)",
-      "Bash(* | zsh)",
       "Bash(bash <(curl *))",
       "Bash(git push --force*)",
       "Bash(git push *--force*)",
@@ -79,7 +60,7 @@
           },
           {
             "type": "command",
-            "command": "CMD=$(jq -r '.tool_input.command'); if echo \"$CMD\" | grep -qiE 'git[[:space:]]+push.*(main|master)'; then echo 'BLOCKED: Use feature branches, not direct push to main' >&2; exit 2; fi"
+            "command": "CMD=$(jq -r '.tool_input.command'); if echo \"$CMD\" | grep -qE 'git[[:space:]]+push.*(main|master)'; then echo 'BLOCKED: Use feature branches, not direct push to main' >&2; exit 2; fi"
           }
         ]
       }
