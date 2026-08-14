@@ -136,7 +136,7 @@ Colocated `*.test.ts` files. Supply chain: `pnpm audit --audit-level=moderate` b
 **Style:**
 - Prefer `for` loops with mutable accumulators over iterator chains
 - Shadow variables through transformations (no `raw_x`/`parsed_x` prefixes)
-- No wildcard matches; avoid `matches!` macro—explicit destructuring catches field changes
+- Prefer patterns that break on type changes: no `_` arms, exhaustive `match` over `matches!`, explicit fields over `..`
 - Use `let...else` for early returns; keep happy path unindented
 
 **Type design:**
