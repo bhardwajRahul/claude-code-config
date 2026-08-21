@@ -185,6 +185,8 @@ Claude Code has a native sandbox that provides filesystem and network isolation 
 
 **Default behavior:** Writes are restricted to the current working directory and its subdirectories. Reads are unrestricted -- the agent can still read `~/.ssh`, `~/.aws`, etc. Network access is limited to explicitly allowed domains.
 
+When a worktree helper gets blocked this way, the danger isn't the blocked write -- it's the silent fallback to `git checkout -b` in the shared directory, after which the agent believes it has isolation it doesn't have. Either configure an in-repo path (`git worktree add .worktrees/<branch>`) or let the Agent tool's `isolation: "worktree"` handle placement.
+
 **Hardening reads:** The `settings.json` template includes `Read` and `Edit` deny rules that block access to credentials and secrets:
 
 - **SSH/GPG keys** -- `~/.ssh/**`, `~/.gnupg/**`
