@@ -133,9 +133,9 @@ Copy `settings.json` to `~/.claude/settings.json` (or merge entries into your ex
 
 - **`env` (privacy)** -- disables three non-essential outbound streams: Statsig telemetry (`DISABLE_TELEMETRY`), Sentry error reporting (`DISABLE_ERROR_REPORTING`), and feedback surveys (`CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY`). Avoid the umbrella `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` -- it also disables auto-updates.
 - **`env` (agent teams)** -- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` enables [multi-agent teams](https://code.claude.com/docs/en/agent-teams) where one session coordinates multiple teammates with independent context windows. Experimental -- known limitations around session resumption and task coordination. Note that it also changes ordinary delegation: while agent teams are on, a subagent Claude names on its own launches as a full teammate, so teams can form when you didn't ask for one.
-- **`env` (subagent depth)** -- `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH: "3"` pins how many layers of subagents can nest below the main agent. Three is the current built-in default, so this changes nothing today -- the point is that the default is delivered by a remote feature flag, so without pinning it the effective nesting limit can move without a release. Claude 5 models delegate more readily than previous ones, and this limit is enforced at spawn time rather than being prompt guidance. Set it to `1` to stop subagents from spawning their own. The companion `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` (default `20`) is left unset here: 20 is already generous, and sessions running at ultracode effort are never refused, so it isn't an absolute cap. Both require Claude Code v2.1.219 or later.
+- **`env` (subagent depth)** -- `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH: "3"` pins how many layers of subagents can nest below the main agent. Three is the current built-in default, so this changes nothing today -- the point is that the default is delivered by a remote feature flag (observed in the binary; the docs don't say so), so without pinning it the effective nesting limit can move without a release. Claude 5 models delegate more readily than previous ones, and this limit is enforced at spawn time rather than being prompt guidance. Set it to `1` to stop subagents from spawning their own. The companion `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` (default `20`) is left unset here: 20 is already generous, and picking a lower number is a throughput guess. Both env vars exist since Claude Code v2.1.217; the built-in depth default of 3 dates from v2.1.219, so earlier releases default differently.
 - **`enableAllProjectMcpServers: false`** -- this is the default, set explicitly so it doesn't get flipped by accident. Project `.mcp.json` files live in git, so a compromised repo could ship malicious MCP servers.
-- **No `alwaysThinkingEnabled`** -- absent and `true` behave identically. The setting's documented meaning is "when false, thinking is disabled; when absent or true, thinking is enabled automatically for supported models," so setting it to `true` bought nothing. Setting it to `false` still disables thinking on Opus 5 (at `high` effort or below) and on Sonnet 5; Fable 5 can't turn thinking off at all. `MAX_THINKING_TOKENS=0` does the same and takes precedence over the setting. What's gone on Claude 5 is manual thinking budgets, so [**effort**](https://platform.claude.com/docs/en/build-with-claude/effort) is the lever for the intelligence-versus-cost tradeoff -- set it with `/effort`. Anthropic's guidance is `high` as the default, `xhigh` for the hardest coding and agentic work, and `low` or `medium` liberally for routine work where quality holds, since lower settings on Claude 5 often beat `xhigh` on the previous generation.
+- **No `alwaysThinkingEnabled`** -- absent and `true` behave identically: thinking is enabled automatically for supported models unless the setting is `false`, so setting it to `true` bought nothing. Setting it to `false` still disables thinking on Opus 5 (at `high` effort or below) and on Sonnet 5; Fable 5 can't turn thinking off at all. `MAX_THINKING_TOKENS=0` does the same and takes precedence over the setting. What's gone on Claude 5 is manual thinking budgets, so [**effort**](https://platform.claude.com/docs/en/build-with-claude/effort) is the lever for the intelligence-versus-cost tradeoff -- set it with `/effort`. Anthropic's guidance is `high` as the default, `xhigh` for the hardest coding and agentic work, and `low` or `medium` liberally for routine work where quality holds, since lower settings on Claude 5 often beat `xhigh` on the previous generation.
 - **`permissions`** -- deny rules that block reading credentials/secrets and editing shell config (see [Sandboxing](#sandboxing))
 - **`cleanupPeriodDays: 365`** -- keeps conversation history for a year instead of the default 30 days, so `/insights` has more data
 - **`hooks`** -- two `PreToolUse` hooks on Bash that block `rm -rf` and direct push to main (see [Hooks](#hooks))
@@ -172,11 +172,13 @@ The global `CLAUDE.md` file at `~/.claude/CLAUDE.md` sets default instructions f
 
 | file | loads when Claude touches |
 | ---- | ------------------------- |
-| `rules/python.md` | `*.py`, `*.pyi`, `pyproject.toml`, `uv.lock` |
+| `rules/python.md` | `*.py`, `*.pyi`, `*.ipynb`, `pyproject.toml`, `uv.lock` |
 | `rules/rust.md` | `*.rs`, `Cargo.toml`, `Cargo.lock` |
-| `rules/typescript.md` | `*.ts`, `*.tsx`, `*.js`, `*.jsx`, `*.mjs`, `package.json`, `tsconfig.json` |
+| `rules/typescript.md` | `*.ts`, `*.tsx`, `*.mts`, `*.cts`, `*.js`, `*.jsx`, `*.mjs`, `*.cjs`, `package.json`, `tsconfig.json` |
 | `rules/bash.md` | `*.sh`, `*.bash` |
-| `rules/github-actions.md` | `.github/workflows/**`, `.github/actions/**`, `dependabot.yml` |
+| `rules/github-actions.md` | `.github/workflows/**`, `.github/actions/**`, `dependabot.yml`, `dependabot.yaml` |
+
+The globs match file paths, not contents, so extensionless shell scripts (git hooks, `bin/` tools) never trigger `rules/bash.md` -- the always-loaded tool table still covers `shellcheck` and `shfmt` for those.
 
 `/trailofbits:config` installs both layers and handles a non-default `CLAUDE_CONFIG_DIR`. To do it by hand:
 
@@ -186,7 +188,7 @@ cp claude-md-template.md ~/.claude/CLAUDE.md
 cp rules/*.md ~/.claude/rules/
 ```
 
-Review and customize both layers -- adjust the toolchain table and the rule files to match your stack. One rule of thumb when deciding which layer something goes in: path-scoped rules are not re-injected after auto-compaction, so anything that must hold unconditionally belongs in `CLAUDE.md`, and anything that must hold *regardless of what Claude decides* belongs in a [hook](#hooks).
+Review and customize both layers -- adjust the toolchain table and the rule files to match your stack. One rule of thumb when deciding which layer something goes in: path-scoped rules are not automatically re-injected after auto-compaction -- they come back only when Claude next reads a matching file -- so anything that must hold unconditionally belongs in `CLAUDE.md`, and anything that must hold *regardless of what Claude decides* belongs in a [hook](#hooks).
 
 For background on how CLAUDE.md files work, see [Manage Claude's memory](https://code.claude.com/docs/en/memory). To debug which files actually loaded and why, use the `InstructionsLoaded` hook; `/context` shows the session-start set. Note that `@path` imports load at launch like the rest of `CLAUDE.md`, so they help organization but don't reduce context -- path-scoped rules are the mechanism that does.
 
@@ -532,7 +534,7 @@ Browser automation via the [Claude in Chrome](https://chromewebstore.google.com/
 
 ## Fast Mode
 
-`/fast` toggles fast mode: the same Opus model with faster output, at 2x the token cost ($10/$50 per MTok versus $5/$25). It does not downgrade to a smaller model. Available on Opus 5 and Opus 4.8 only. Behavior elsewhere varies rather than being a no-op: on Opus 4.6 requests run at standard speed and standard rates, on Opus 4.7 they error, and on Sonnet or Haiku enabling it switches you to Opus. Not supported in the VS Code extension. Leave it off by default.
+`/fast` toggles fast mode: the same Opus model with faster output, at 2x the token cost ($10/$50 per MTok versus $5/$25). It does not downgrade to a smaller model. Available on Opus 5 and Opus 4.8 only. Elsewhere it isn't a silent no-op: switching to an unsupported model (Opus 4.6, Opus 4.7) turns fast mode off, and on Sonnet or Haiku enabling it switches you to Opus. Not supported in the VS Code extension. Leave it off by default.
 
 The only time fast mode is worth it is **tight interactive loops** -- you're debugging live, iterating on output, and every second of latency costs you focus. If you're about to kick off an autonomous run (`/fix-issue`, a swarm, anything you walk away from), turn it off first. The agent doesn't benefit from lower latency; you're just burning money.
 

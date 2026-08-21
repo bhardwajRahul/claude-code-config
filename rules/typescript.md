@@ -2,9 +2,12 @@
 paths:
   - "**/*.ts"
   - "**/*.tsx"
+  - "**/*.mts"
+  - "**/*.cts"
   - "**/*.js"
   - "**/*.jsx"
   - "**/*.mjs"
+  - "**/*.cjs"
   - "**/package.json"
   - "**/tsconfig.json"
 ---
@@ -46,5 +49,5 @@ Use `pnpm`, not `npm` or `yarn`.
 
 - `pnpm audit --audit-level=moderate` before installing
 - Pin exact versions (no `^` or `~`)
-- Enforce a 24-hour publish delay: `pnpm config set minimumReleaseAge 1440`
+- Enforce a 24-hour publish delay: `pnpm config set minimumReleaseAge 1440` (pnpm 10.16+; older versions ignore the setting silently)
 - Block postinstall scripts: `pnpm config set ignore-scripts true`

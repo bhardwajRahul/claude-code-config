@@ -1,7 +1,7 @@
 ---
 paths:
-  - ".github/workflows/**"
-  - ".github/actions/**"
+  - "**/.github/workflows/**"
+  - "**/.github/actions/**"
   - "**/dependabot.yml"
   - "**/dependabot.yaml"
 ---
@@ -30,7 +30,7 @@ zizmor .github/workflows/        # security audit
 - Set `permissions:` explicitly at the workflow or job level; default to `contents: read`
 - `persist-credentials: false` on `actions/checkout` unless the job genuinely needs to push
 - Never interpolate untrusted input (`github.event.issue.title`, branch names, PR bodies) directly into a `run:` block — pass it through `env:` and reference the variable
-- Prefer `pull_request` over `pull_request_target`; the latter runs with write access to secrets
+- Prefer `pull_request` over `pull_request_target`; the latter runs with access to secrets and a read/write `GITHUB_TOKEN`
 
 ## Dependabot
 

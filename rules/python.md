@@ -2,6 +2,7 @@
 paths:
   - "**/*.py"
   - "**/*.pyi"
+  - "**/*.ipynb"
   - "**/pyproject.toml"
   - "**/uv.lock"
 ---
@@ -43,9 +44,12 @@ convention = "google"
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
 ```
 
-Each section needs its rule family in `select` to take effect: `C90` for `max-complexity`, `PL` for `max-args` (PLR0913), `max-positional-args` (PLR0917) and `max-statements` (PLR0915), `D` for the docstring convention, `TID` for the relative-import ban (TID252).
+Each section needs its rule family in `select` to take effect: `C90` for `max-complexity`, `PL` for `max-args` (PLR0913), `max-positional-args` (PLR0917) and `max-statements` (PLR0915), `D` for the docstring convention, `TID` for the relative-import ban (TID252). Selecting `D` makes docstrings mandatory on every public module, class, and function; the per-file-ignores block keeps tests out of that.
 
 Two limits to know about. `max-args` caps *total* arguments, so `max-positional-args` is what actually bounds positional ones — and PLR0917 was preview-gated before ruff 0.16, so on an older ruff it silently does nothing and that limit disappears. Ruff has no direct max-lines-per-function rule either; `max-statements` is the closest proxy, so treat function length as a review concern rather than assuming lint covers it.
 
