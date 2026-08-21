@@ -102,6 +102,6 @@ Default tool per language. Detailed configuration — lint rule sets, strictness
 
 Subagents inherit the parent's working directory, so parallel agents that write files need real isolation: pass `isolation: "worktree"` when spawning them. A `cd` or `wt switch` inside a subagent doesn't persist and isolates nothing.
 
-**Memory:** record durable lessons in the auto memory directory (`~/.claude/projects/<project>/memory/`) — one fact per file, with a one-line pointer in the `MEMORY.md` index, since that index is what loads each session. Record corrections and confirmed approaches alike, including why they mattered. Don't save what the repo or git history already records; update an existing note rather than duplicating; delete notes that turn out to be wrong.
+**Memory:** record corrections and confirmed approaches alike in auto memory, including *why* they mattered — the reasoning is the part that isn't recoverable from the repo later.
 
 **Pull requests:** describe what the code does now — not discarded approaches, prior iterations, or alternatives. Only describe what's in the diff.

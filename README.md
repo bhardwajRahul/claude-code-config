@@ -531,7 +531,7 @@ Browser automation via the [Claude in Chrome](https://chromewebstore.google.com/
 
 ## Fast Mode
 
-`/fast` toggles fast mode. Same Opus 4.6 model, ~2.5x faster output, 6x the cost per token. Leave it off by default.
+`/fast` toggles fast mode: the same Opus model with faster output, at 2x the token cost ($10/$50 per MTok versus $5/$25). It does not downgrade to a smaller model. Available on Opus 5 and Opus 4.8 only. Behavior elsewhere varies rather than being a no-op: on Opus 4.6 requests run at standard speed and standard rates, on Opus 4.7 they error, and on Sonnet or Haiku enabling it switches you to Opus. Not supported in the VS Code extension. Leave it off by default.
 
 The only time fast mode is worth it is **tight interactive loops** -- you're debugging live, iterating on output, and every second of latency costs you focus. If you're about to kick off an autonomous run (`/fix-issue`, a swarm, anything you walk away from), turn it off first. The agent doesn't benefit from lower latency; you're just burning money.
 
